@@ -37,4 +37,8 @@ public class User {
     // letter, one digit, one special character, and be at least 8 characters
     // long.")
 
+    @NotBlank
+    private String role; // USER or ADMIN
+
+
 }
