@@ -8,9 +8,8 @@ import com.luxenest.luxenest.service.UserService;
 
 import jakarta.validation.Valid;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,21 +29,31 @@ public class userController {
     private UserRepository userRepository;
 
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getAllUsers() {
+    public ResponseEntity<ApiResponse<List<User>>> getAllUsers() {
         List<User> allUsers = userService.getAllUsers();
 
         if (allUsers != null && !allUsers.isEmpty()) {
-            Map<String, Object> response = new HashMap<>();
-            response.put("Users", allUsers);
+            ApiResponse<List<User>> response = new ApiResponse<>(
+                    "success",
+                    HttpStatus.OK.value(),
+                    "Users retrieved successfully",
+                    allUsers,
+                    LocalDateTime.now().toString());
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } else {
-            return ResponseEntity.notFound().build();
+            ApiResponse<List<User>> response = new ApiResponse<>(
+                    "failure",
+                    HttpStatus.NOT_FOUND.value(),
+                    "No user Found",
+                    null,
+                    java.time.LocalDateTime.now().toString());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
 
     }
 
-      // Create User (Accessible by ADMIN only)
+    // Create User (Accessible by ADMIN only)
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/add-user")
     public ResponseEntity<ApiResponse<User>> createUser(@Valid @RequestBody User user) {
@@ -134,8 +143,24 @@ public class userController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<User> deleteUserById(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<ApiResponse<User>> deleteUserById(@PathVariable Long id) {
+        boolean isDeleted = userService.deleteUser(id);
+        if (!isDeleted) {
+            ApiResponse<User> errorResponse = new ApiResponse<>(
+                    "error",
+                    HttpStatus.NOT_FOUND.value(),
+                    "User not found",
+                    null,
+                    java.time.LocalDateTime.now().toString());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
+        }
+        ApiResponse<User> response = new ApiResponse<>(
+                "success",
+                HttpStatus.OK.value(),
+                "User deleted",
+                null,
+                java.time.LocalDateTime.now().toString());
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+
     }
 }

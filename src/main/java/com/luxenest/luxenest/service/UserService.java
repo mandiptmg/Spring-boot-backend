@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.luxenest.luxenest.model.User;
@@ -15,6 +16,7 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -24,7 +26,8 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public User createUser(User user) {      
+    public User createUser(User user) { 
+        user.setPassword(encoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 
@@ -40,7 +43,8 @@ public class UserService {
     }
 
     // void means no return
-    public void deleteUser(Long id) {
+    public boolean deleteUser(Long id) {
         userRepository.deleteById(id);
+        return true;
     }
 }
